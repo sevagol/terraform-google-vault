@@ -64,10 +64,12 @@ gsutil cp "gs://${vault_tls_bucket}/${vault_tls_cert_filename}" /etc/vault.d/tls
 gsutil cp "gs://${vault_tls_bucket}/${vault_tls_key_filename}" /etc/vault.d/tls/vault.key.enc
 
 # Decrypt the Vault private key
-base64 --decode < /etc/vault.d/tls/vault.key.enc | gcloud kms decrypt \
+cat /etc/vault.d/tls/vault.key.enc | base64 -d | gcloud kms decrypt \
+  --location=asia-southeast1 \
   --project="${kms_project}" \
+  --keyring=vault-keyring-1 \
   --key="${kms_crypto_key}" \
-  --plaintext-file=/etc/vault.d/tls/vault.key \
+  --plaintext-file=- \
   --ciphertext-file=-
 
 # Make sure Vault owns everything
