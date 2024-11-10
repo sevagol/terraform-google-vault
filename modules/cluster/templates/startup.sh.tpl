@@ -63,17 +63,22 @@ gsutil cp "gs://${vault_tls_bucket}/${vault_ca_cert_filename}" /etc/vault.d/tls/
 gsutil cp "gs://${vault_tls_bucket}/${vault_tls_cert_filename}" /etc/vault.d/tls/vault.crt
 gsutil cp "gs://${vault_tls_bucket}/${vault_tls_key_filename}" /etc/vault.d/tls/vault.key.enc
 
-# Decode the base64-encoded file and save it temporarily
-base64 -d -i /etc/vault.d/tls/vault.key.enc -o /tmp/vault.key.decoded
+if ! base64 -d -i /etc/vault.d/tls/vault.key.enc -o /tmp/vault.key.decoded; then
+  echo "Error: Failed to decode base64 file" >&2
+  exit 1
+fi
 
-# Use gcloud kms decrypt to decrypt the decoded file
-gcloud kms decrypt \
+# Decrypt the temporary decoded file
+if ! gcloud kms decrypt \
   --location=asia-southeast1 \
   --project="${kms_project}" \
   --keyring=vault-keyring-1 \
   --key="${kms_crypto_key}" \
   --ciphertext-file=/tmp/vault.key.decoded \
-  --plaintext-file=/etc/vault.d/tls/vault.key
+  --plaintext-file=/etc/vault.d/tls/vault.key; then
+  echo "Error: Failed to decrypt file" >&2
+  exit 1
+fi
 
 # Remove the temporary decoded file for security
 rm /tmp/vault.key.decoded
