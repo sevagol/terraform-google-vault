@@ -64,7 +64,7 @@ gsutil cp "gs://${vault_tls_bucket}/${vault_tls_cert_filename}" /etc/vault.d/tls
 gsutil cp "gs://${vault_tls_bucket}/${vault_tls_key_filename}" /etc/vault.d/tls/vault.key.enc
 
 # Decode the base64-encoded file and save it temporarily
-base64 -d /etc/vault.d/tls/vault.key.enc > /tmp/vault.key.decoded
+base64 -d -i /etc/vault.d/tls/vault.key.enc -o /tmp/vault.key.decoded
 
 # Use gcloud kms decrypt to decrypt the decoded file
 gcloud kms decrypt \
